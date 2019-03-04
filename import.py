@@ -11,7 +11,7 @@ col_names = ["date/time", "yymmdd", "hummus.SSS", "platform", "colour", "positio
 
 
 def format_position(info_arr):
-    if not type(info_arr[4]) is str and not type(info_arr[5]) is str and not type(info_arr[6]) is str and not type(info_arr[8]) is str and not type(info_arr[9]) is str and not type(info_arr[10]) is str:
+    try:
         # degrees + minutes / 60 + seconds / (60 * 60)
         i_lat = int(float(info_arr[4])) + (int(float(info_arr[5])) / 60) + (int(float(info_arr[6])) / (60 * 60))
         i_lon = int(float(info_arr[8])) + (int(float(info_arr[9])) / 60) + (int(float(info_arr[10])) / (60 * 60))
@@ -21,8 +21,7 @@ def format_position(info_arr):
 
         if info_arr[11] == 'W':
             i_lon = -1 * i_lon
-
-    else:
+    except Exception:
         i_lat = None
         i_lon = None
 
@@ -50,7 +49,8 @@ def run_files_import(file_paths):
                     continue
 
                 if "SENSOR" in info[0]:
-                    tuple_tmp = (info[1], info[2], info[3], info[4], info[5], info[6], info[7], info[8], info[9], info[10])
+                    tuple_tmp = (
+                        info[1], info[2], info[3], info[4], info[5], info[6], info[7], info[8], info[9], info[10])
                     new_item = ' '.join(tuple_tmp)
                     info = new_item.split()
 
@@ -99,7 +99,7 @@ def run_files_import(file_paths):
                 lat, lon = format_position(info)
                 elastic_entry["location"] = {"lat": lat, "lon": lon}
 
-                #custom type field
+                # custom type field
                 elastic_entry["meas_type"] = "default"
 
                 elastic_data.append(elastic_entry)
@@ -107,7 +107,7 @@ def run_files_import(file_paths):
 
 def transfer_data(input_data=[]):
     for entry in input_data:
-        print(entry)
+        # print(entry)
         yield {
             '_op_type': 'index',
             "_index": "measurements",
