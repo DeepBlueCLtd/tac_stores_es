@@ -1,3 +1,6 @@
+# List of fields in ES
+# ["date/time", "yymmdd", "hummus.SSS", "platform", "colour", "position", "course", "speed", "depth"]
+
 import datetime
 from elasticsearch import Elasticsearch
 from elasticsearch import helpers
@@ -6,8 +9,6 @@ file_paths_array = ["data/track_one.rep", "data/track_two.rep", "data/sen_frig_s
 es = Elasticsearch()
 
 elastic_data = []
-col_names = ["date/time", "yymmdd", "hummus.SSS", "platform", "colour", "position",
-             "course", "speed", "depth"]
 
 
 def format_position(info_arr):
@@ -30,6 +31,12 @@ def format_position(info_arr):
 
 def run_files_import(file_paths):
     for path in file_paths:
+
+        es_index = ''
+        if '.rep' in path:
+            es_index = 'states'
+        elif '.dsf' in path:
+            es_index = 'contacts'
 
         with open(path, "r") as f:
             measurements = [line.strip() for line in f.readlines()]
@@ -102,31 +109,26 @@ def run_files_import(file_paths):
                 # custom type field
                 elastic_entry["meas_type"] = "default"
 
+                # es index name
+                elastic_entry['es_index'] = es_index
+
                 elastic_data.append(elastic_entry)
 
 
-def transfer_data(input_data=[]):
+def prepare_data(input_data=[]):
     for entry in input_data:
-        # print(entry)
+        es_index = entry["es_index"]
+        del entry["es_index"]
         yield {
             '_op_type': 'index',
-            "_index": "measurements",
+            "_index": es_index,
             "_type": "geo_data",
             "_source": entry
         }
 
 
-doc = {
-    'author': 'deep blue',
-    'text': 'Geo data 2 Elasticsearch',
-    'timestamp': datetime.datetime.now(),
-}
-
-es.indices.delete(index='measurements', ignore=[400, 404])
-es.index(index="measurements", doc_type='geo_data', id=1, body=doc)
-
 print("Preparing data")
 run_files_import(file_paths_array)
 print("Transferring the data")
-transfer_data(elastic_data)
-helpers.bulk(es, transfer_data(elastic_data), chunk_size=1000)
+prepare_data(elastic_data)
+helpers.bulk(es, prepare_data(elastic_data), chunk_size=1000)
