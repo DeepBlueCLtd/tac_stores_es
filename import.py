@@ -2,6 +2,9 @@
 # ["date/time", "yymmdd", "hummus.SSS", "platform", "colour", "position", "course", "speed", "depth"]
 
 import datetime
+import re
+import regex as regex
+
 from elasticsearch import Elasticsearch
 from elasticsearch import helpers
 
@@ -17,6 +20,7 @@ def read_file(source_filename):
     for filepath in f:
         file_paths_array.append(filepath.strip())
 
+
 def format_position(info_arr):
     # degrees + minutes / 60 + seconds / (60 * 60)
     i_lat = int(float(info_arr[4])) + (int(float(info_arr[5])) / 60) + (int(float(info_arr[6])) / (60 * 60))
@@ -28,13 +32,29 @@ def format_position(info_arr):
     if info_arr[11] == 'W':
         i_lon = -1 * i_lon
 
-
     return i_lat, i_lon
+
+
+def date_time_format(date_str):
+    print(date_str)
+    x = re.search("\d+\.+?\d*", date_str)
+    if x is None:
+        print(x)
+        date_time_obj = datetime.datetime.strptime(date_str, '%Y%m%d %H%M%S')
+    else:
+        z = re.match("(19|20)\d{2}", date_str)
+        if z and z.group():
+            print(date_str)
+            date_time_obj = datetime.datetime.strptime(date_str, '%Y%m%d %H%M%S.%f')
+        else:
+            date_time_obj = datetime.datetime.strptime(date_str, '%y%m%d %H%M%S.%f')
+
+    return date_time_obj
 
 
 def run_files_import(file_paths):
     for path in file_paths:
-
+        print(path)
         es_index = ''
         if '.rep' in path:
             es_index = 'states'
@@ -48,16 +68,15 @@ def run_files_import(file_paths):
 
             for ind, item in enumerate(measurements):
 
-                # @TODO omit the head of table, should be depended on the string not on index number
-                if ind == 0:
-                    continue
-
                 # single object for each record
                 elastic_entry = {}
                 # splitting the line off
                 info = item.split()
 
                 if not info:
+                    continue
+
+                if ';;' in info[0]:
                     continue
 
                 # Checking the type of file and using of needed logic
@@ -75,7 +94,7 @@ def run_files_import(file_paths):
 
                 # time field
                 date_str = info[0] + " " + info[1]
-                date_time_obj = datetime.datetime.strptime(date_str, '%y%m%d %H%M%S.%f')
+                date_time_obj = date_time_format(date_str)
                 elastic_entry["time"] = date_time_obj
 
                 # platform field
