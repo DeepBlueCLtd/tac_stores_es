@@ -36,15 +36,12 @@ def format_position(info_arr):
 
 
 def date_time_format(date_str):
-    print(date_str)
     x = re.search("\d+\.+?\d*", date_str)
     if x is None:
-        print(x)
         date_time_obj = datetime.datetime.strptime(date_str, '%Y%m%d %H%M%S')
     else:
         z = re.match("(19|20)\d{2}", date_str)
         if z and z.group():
-            print(date_str)
             date_time_obj = datetime.datetime.strptime(date_str, '%Y%m%d %H%M%S.%f')
         else:
             date_time_obj = datetime.datetime.strptime(date_str, '%y%m%d %H%M%S.%f')
