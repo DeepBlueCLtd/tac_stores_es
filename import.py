@@ -38,7 +38,11 @@ def format_position(info_arr):
 def date_time_format(date_str):
     x = re.search("\d+\.+?\d*", date_str)
     if x is None:
-        date_time_obj = datetime.datetime.strptime(date_str, '%Y%m%d %H%M%S')
+        short_d = re.match("(19|20)\d{2}", date_str)
+        if short_d and short_d.group():
+            date_time_obj = datetime.datetime.strptime(date_str, '%Y%m%d %H%M%S')
+        else:
+            date_time_obj = datetime.datetime.strptime(date_str, '%y%m%d %H%M%S')
     else:
         z = re.match("(19|20)\d{2}", date_str)
         if z and z.group():
@@ -73,7 +77,7 @@ def run_files_import(file_paths):
                 if not info:
                     continue
 
-                if ';;' in info[0]:
+                if ';;' in info[0] or ';TIMETEXT:' in info[0] or ';PERIODTEXT:' in info[0] or ';TEXT:' in info[0]:
                     continue
 
                 # Checking the type of file and using of needed logic
