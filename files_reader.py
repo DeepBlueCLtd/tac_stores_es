@@ -1,21 +1,31 @@
+import os
 from os import walk
 
 # path to the data directory
-path = "data/"
-# common array of all files in the data folder
-filenames_data = []
+SOURCE_PATH = "data/"
+dest_dir = "res_files/"
 
+# files in the data folder
+all_filenames_data = []
+dsf_files = []
+rep_files = []
+
+# file types allowed for handling
+file_types = [".dsf", ".rep"]
 
 # reqursive function for handling folder of data
 def recursive_read(path):
     # print(path)
     for (dirpath, dirnames, filenames) in walk(path):
-        # print(dirnames)
-        # print(filenames)
-        # print(dirpath)
         if filenames:
             for filename in filenames:
-                filenames_data.append(path + filename)
+                all_filenames_data.append(path + filename)
+
+                if filename.endswith(".dsf"):
+                    dsf_files.append(path+filename)
+
+                if filename.endswith(".rep"):
+                    rep_files.append(path+filename)
 
         if dirnames:
             for dirname in dirnames:
@@ -23,11 +33,30 @@ def recursive_read(path):
         break
 
 
-recursive_read(path)
+def input_function():
+    path = SOURCE_PATH
+    recursive_read(path)
 
-print(filenames_data)
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir)
 
-file = open("list_of_filenames.txt","w")
-for filepath in filenames_data:
-    file.write(filepath+'\n')
-file.close()
+    # save all filenames
+    file = open(dest_dir + "list_of_all_filenames.txt", "w")
+    for filepath in all_filenames_data:
+        file.write(filepath + '\n')
+    file.close()
+
+    # save rep files
+    file = open(dest_dir + "list_rep_filenames.txt", "w")
+    for filepath in rep_files:
+        file.write(filepath + '\n')
+    file.close()
+
+    # save dsf files
+    file = open("res_files/list_dsf_filenames.txt", "w")
+    for filepath in dsf_files:
+        file.write(filepath + '\n')
+    file.close()
+
+# run script
+input_function()
