@@ -47,4 +47,4 @@ def get_files(path, possible_types=[]):
         file.write(filepath + '\n')
     file.close()
 
-    return (globals()[p_type + "_files"] for p_type in possible_types)
+    return {p_type: globals()[p_type + "_files"] for p_type in possible_types}

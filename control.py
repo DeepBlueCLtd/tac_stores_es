@@ -1,6 +1,8 @@
 import files_reader
+import documents_preparation
 
 # path to the data directory
 SOURCE_PATH = "data/"
 
-dsf, rep = files_reader.get_files(SOURCE_PATH, ["dsf", "rep"])
+files = files_reader.get_files(SOURCE_PATH, ["dsf", "rep"])
+states, contacts = documents_preparation.get_documents_from(files)
