@@ -1,8 +1,7 @@
 import os
 from os import walk
 
-# path to the data directory
-SOURCE_PATH = "data/"
+# path to the destination data directory
 dest_dir = "res_files/"
 
 # files in the data folder
@@ -10,32 +9,30 @@ all_filenames_data = []
 dsf_files = []
 rep_files = []
 
-# file types allowed for handling
-file_types = [".dsf", ".rep"]
-
 # reqursive function for handling folder of data
-def recursive_read(path):
+def recursive_read(path, possible_types=[]):
     # print(path)
+    # go through the path
     for (dirpath, dirnames, filenames) in walk(path):
         if filenames:
+            # handling files in directory
             for filename in filenames:
                 all_filenames_data.append(path + filename)
-
-                if filename.endswith(".dsf"):
-                    dsf_files.append(path+filename)
-
-                if filename.endswith(".rep"):
-                    rep_files.append(path+filename)
+                # checking file types
+                for f_type in possible_types:
+                    if filename.endswith("."+f_type):
+                        globals()[f_type + "_files"].append(path + filename)
 
         if dirnames:
+            # go through directories
             for dirname in dirnames:
-                recursive_read(path + dirname + "/")
+                # recursive calling the function
+                recursive_read(path + dirname + "/", possible_types)
         break
 
 
-def input_function():
-    path = SOURCE_PATH
-    recursive_read(path)
+def get_files(path, possible_types=[]):
+    recursive_read(path, possible_types)
 
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
@@ -47,16 +44,15 @@ def input_function():
     file.close()
 
     # save rep files
-    file = open(dest_dir + "list_rep_filenames.txt", "w")
-    for filepath in rep_files:
-        file.write(filepath + '\n')
-    file.close()
+    # file = open(dest_dir + "list_rep_filenames.txt", "w")
+    # for filepath in rep_files:
+    #     file.write(filepath + '\n')
+    # file.close()
+    #
+    # # save dsf files
+    # file = open("res_files/list_dsf_filenames.txt", "w")
+    # for filepath in dsf_files:
+    #     file.write(filepath + '\n')
+    # file.close()
 
-    # save dsf files
-    file = open("res_files/list_dsf_filenames.txt", "w")
-    for filepath in dsf_files:
-        file.write(filepath + '\n')
-    file.close()
-
-# run script
-input_function()
+    return (globals()[p_type + "_files"] for p_type in possible_types)
