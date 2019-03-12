@@ -5,7 +5,6 @@ import re
 
 PATHS_OF_FILES = "res_files/list_of_all_filenames.txt"
 
-elastic_data = []
 elastic_data_contacts = []
 elastic_data_states = []
 
@@ -54,20 +53,10 @@ def date_time_format(date_str):
 def run_files_import(file_paths):
     for path in file_paths:
         try:
-            # print(path)
-            es_index = ''
-            if '.rep' in path:
-                es_index = 'states'
-            elif '.dsf' in path:
-                es_index = 'contacts'
-            else:
-                continue
-
             with open(path, "r") as f:
                 measurements = [line.strip() for line in f.readlines()]
 
                 for ind, item in enumerate(measurements):
-
                     # single object for each record
                     elastic_entry = {}
                     # splitting the line off
@@ -76,8 +65,16 @@ def run_files_import(file_paths):
                     if not info:
                         continue
 
+                    # @TODO this is not perfect solution it works with current data
                     if ';;' in info[0] or ';TIMETEXT:' in info[0] or ';PERIODTEXT:' in info[0] or ';TEXT:' in info[0]:
                         continue
+
+                    # Solution for task: Refactoring python scripts #4
+                    es_index = ''
+                    if ';SENSOR:' in info[0] or ';SENSOR2:' in info[0]:
+                        es_index = 'contacts'
+                    elif int(info[0]) and (len(info[0]) == 6 or len(info[0]) == 8):
+                        es_index = 'states'
 
                     # Checking the type of file and using of needed logic
                     if "SENSOR" in info[0]:
@@ -138,8 +135,6 @@ def run_files_import(file_paths):
 
                     # es index name
                     elastic_entry['es_index'] = es_index
-
-                    elastic_data.append(elastic_entry)
 
                     if es_index == "contacts":
                         elastic_data_contacts.append(elastic_entry)
