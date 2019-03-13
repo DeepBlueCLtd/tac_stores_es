@@ -66,12 +66,12 @@ def run_files_import(file_paths):
                         continue
 
                     # @TODO this is not perfect solution it works with current data
-                    if ';;' in info[0] or ';TIMETEXT:' in info[0] or ';PERIODTEXT:' in info[0] or ';TEXT:' in info[0]:
+                    if ';;' in info[0] or ';TIMETEXT:' in info[0] or ';PERIODTEXT:' in info[0] or ';TEXT:' in info[0] or ';FORMAT_FIX:' in info[0]:
                         continue
 
                     # Solution for task: Refactoring python scripts #4
                     es_index = ''
-                    if ';SENSOR:' in info[0] or ';SENSOR2:' in info[0]:
+                    if ';SENSOR:' in info[0] or ';SENSOR2:' in info[0] or ';SENSOR3:' in info[0]:
                         es_index = 'contacts'
                     elif int(info[0]) and (len(info[0]) == 6 or len(info[0]) == 8):
                         es_index = 'states'
