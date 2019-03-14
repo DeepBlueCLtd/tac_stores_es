@@ -1,5 +1,6 @@
 # ["date/time", "yymmdd", "hummus.SSS", "platform", "colour", "position", "course", "speed", "depth"]
 
+from decimal import Decimal
 import datetime
 import re
 
@@ -50,6 +51,115 @@ def date_time_format(date_str):
     return date_time_obj
 
 
+def parse_state(info):
+    elastic_entry = {}
+
+    # platform field
+    elastic_entry["platform"] = info[2]
+
+    # serial field
+    elastic_entry["serial"] = "EX_ALPHA"
+
+    # sensor field
+    elastic_entry["sensor"] = "GPS"
+
+    # time field
+    date_str = info[0] + " " + info[1]
+    date_time_obj = date_time_format(date_str)
+    elastic_entry["time"] = date_time_obj
+
+    lat, lon = format_position(info)
+    # position field
+    elastic_entry["location"] = {"lat": lat, "lon": lon}
+
+    # heading field
+    elastic_entry["heading"] = Decimal(0)
+
+    # course field
+    if 12 in info:
+        elastic_entry["course"] = info[12]
+    else:
+        elastic_entry["course"] = None
+
+    # speed field
+    if 13 in info:
+        elastic_entry["speed"] = info[13]
+    else:
+        elastic_entry["speed"] = None
+
+    # source field
+    elastic_entry["source"] = "CD_123"
+
+    # privacy field
+    elastic_entry["privacy"] = "public"
+
+    # depth field
+    if 14 in info:
+        elastic_entry["depth"] = info[14]
+    else:
+        elastic_entry["depth"] = None
+
+    # es index name
+    elastic_entry['es_index'] = 'states'
+
+    return elastic_entry
+
+
+def parse_contacts(info):
+    elastic_entry = {}
+
+    tuple_tmp = (
+        info[1], info[2], info[3], info[4], info[5], info[6], info[7], info[8], info[9], info[10])
+    new_item = ' '.join(tuple_tmp)
+    info = new_item.split()
+
+    # platform field
+    elastic_entry["platform"] = info[2]
+
+    # serial field
+    elastic_entry["serial"] = "EX_ALPHA"
+
+    # sensor field
+    elastic_entry["sensor"] = "GPS"
+
+    # time field
+    date_str = info[0] + " " + info[1]
+    date_time_obj = date_time_format(date_str)
+    elastic_entry["time"] = date_time_obj
+
+    # bearing field
+    elastic_entry["bearing"] = Decimal(0)
+
+    # range field
+    elastic_entry["range"] = Decimal(0)
+
+    # freq field
+    elastic_entry["freq"] = Decimal(0)
+
+    # position field
+    elastic_entry["location"] = {"lat": None, "lon": None}
+
+    # major field
+    elastic_entry["major"] = Decimal(0)
+
+    # minor field
+    elastic_entry["minor"] = Decimal(0)
+
+    # orientation field
+    elastic_entry["orientation"] = Decimal(0)
+
+    # source field
+    elastic_entry["source"] = "CD_123"
+
+    # privacy field
+    elastic_entry["privacy"] = "public"
+
+    # es index name
+    elastic_entry['es_index'] = 'contacts'
+
+    return elastic_entry
+
+
 def run_files_import(file_paths):
     for path in file_paths:
         try:
@@ -65,81 +175,18 @@ def run_files_import(file_paths):
                     if not info:
                         continue
 
-                    # @TODO this is not perfect solution it works with current data
-                    if ';;' in info[0] or ';TIMETEXT:' in info[0] or ';PERIODTEXT:' in info[0] or ';TEXT:' in info[0] or ';FORMAT_FIX:' in info[0]:
-                        continue
+                    # if ';;' in info[0] or ';TIMETEXT:' in info[0] or ';PERIODTEXT:' in info[0] or ';TEXT:' in info[0] or ';FORMAT_FIX:' in info[0]:
+                    #     continue
 
                     # Solution for task: Refactoring python scripts #4
-                    es_index = ''
                     if ';SENSOR:' in info[0] or ';SENSOR2:' in info[0] or ';SENSOR3:' in info[0]:
-                        es_index = 'contacts'
-                    elif int(info[0]) and (len(info[0]) == 6 or len(info[0]) == 8):
-                        es_index = 'states'
-
-                    # Checking the type of file and using of needed logic
-                    if "SENSOR" in info[0]:
-                        tuple_tmp = (
-                            info[1], info[2], info[3], info[4], info[5], info[6], info[7], info[8], info[9], info[10])
-                        new_item = ' '.join(tuple_tmp)
-                        info = new_item.split()
-                        # position field
-                        elastic_entry["location"] = {"lat": None, "lon": None}
-                    else:
-                        # position field
-                        lat, lon = format_position(info)
-                        elastic_entry["location"] = {"lat": lat, "lon": lon}
-
-                    # time field
-                    date_str = info[0] + " " + info[1]
-                    date_time_obj = date_time_format(date_str)
-                    elastic_entry["time"] = date_time_obj
-
-                    # platform field
-                    elastic_entry["platform"] = info[2]
-
-                    # color field
-                    elastic_entry["color"] = info[3]
-
-                    # course field
-                    if 12 in info:
-                        elastic_entry["course"] = info[12]
-                    else:
-                        elastic_entry["course"] = None
-
-                    # speed field
-                    if 13 in info:
-                        elastic_entry["speed"] = info[13]
-                    else:
-                        elastic_entry["speed"] = None
-
-                    # depth field
-                    if 14 in info:
-                        elastic_entry["depth"] = info[14]
-                    else:
-                        elastic_entry["depth"] = None
-
-                    # serial field
-                    elastic_entry["serial"] = "EX_ALPHA"
-
-                    # sensor field
-                    elastic_entry["sensor"] = "GPS"
-
-                    # source field
-                    elastic_entry["source"] = "CD_123"
-
-                    # privacy field
-                    elastic_entry["privacy"] = "public"
-
-                    # custom type field
-                    elastic_entry["meas_type"] = "default"
-
-                    # es index name
-                    elastic_entry['es_index'] = es_index
-
-                    if es_index == "contacts":
+                        elastic_entry = parse_contacts(info)
                         elastic_data_contacts.append(elastic_entry)
-                    elif es_index == "states":
+                    elif int(info[0]) and (len(info[0]) == 6 or len(info[0]) == 8):
+                        elastic_entry = parse_state(info)
                         elastic_data_states.append(elastic_entry)
+                    else:
+                        continue
 
         except ValueError as e:
             print(ValueError)
