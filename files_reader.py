@@ -1,14 +1,11 @@
 import os
 from os import walk
 
-# path to the destination data directory
-dest_dir = "res_files/"
-
 # files in the data folder
 all_filenames_data = []
 
 
-# reqursive function for handling folder of data
+# recursive function for handling folder of data
 def recursive_read(path, possible_types=[]):
     # print(path)
     # go through the path
@@ -37,14 +34,5 @@ def get_files(path, possible_types=[]):
         globals()[p_type + "_files"] = []
 
     recursive_read(path, possible_types)
-
-    if not os.path.exists(dest_dir):
-        os.makedirs(dest_dir)
-
-    # save all filenames
-    file = open(dest_dir + "list_of_all_filenames.txt", "w")
-    for filepath in all_filenames_data:
-        file.write(filepath + '\n')
-    file.close()
 
     return {p_type: globals()[p_type + "_files"] for p_type in possible_types}
