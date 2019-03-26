@@ -4,8 +4,6 @@ from decimal import Decimal
 import datetime
 import re
 
-PATHS_OF_FILES = "res_files/list_of_all_filenames.txt"
-
 elastic_data_contacts = []
 elastic_data_states = []
 

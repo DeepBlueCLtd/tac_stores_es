@@ -3,7 +3,6 @@
 from elasticsearch import Elasticsearch
 from elasticsearch import helpers
 es = Elasticsearch()
-error_log_file = open("error_log.txt", "w+")
 
 
 def prepare_data(states, contacts):
